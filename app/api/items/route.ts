@@ -1,3 +1,4 @@
+//api/items/route.ts
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
@@ -47,6 +48,8 @@ export async function POST(req: Request) {
         price: Number(body.price),
         unit: body.unit || null,
         description: body.description || null,
+        gstRate: body.gstRate !== "" && body.gstRate !== undefined ? Number(body.gstRate) : null,
+        hsn: body.hsn || null,
         userId: user.userId,
       },
     });

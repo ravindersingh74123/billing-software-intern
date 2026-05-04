@@ -36,12 +36,21 @@ export async function POST(req: Request) {
       email,
       pan,
       gstin,
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      pincode,
+      bankName,
+      accountName,
+      accountNumber,
+      ifsc,
     } = body;
 
     if (!displayName) {
       return NextResponse.json(
         { error: "Display name is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,10 +58,7 @@ export async function POST(req: Request) {
     const user = await getUserFromRequest();
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const customer = await prisma.customer.create({
@@ -63,6 +69,15 @@ export async function POST(req: Request) {
         email,
         pan,
         gstin,
+        addressLine1,
+        addressLine2,
+        city,
+        state,
+        pincode,
+        bankName,
+        accountName,
+        accountNumber,
+        ifsc,
         userId: user.userId,
       },
     });
@@ -72,7 +87,7 @@ export async function POST(req: Request) {
     console.error("POST /customers error:", err);
     return NextResponse.json(
       { error: "Failed to create customer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -84,10 +99,7 @@ export async function GET() {
     const user = await getUserFromRequest();
 
     if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const customers = await prisma.customer.findMany({
@@ -100,7 +112,7 @@ export async function GET() {
     console.error("GET /customers error:", err);
     return NextResponse.json(
       { error: "Failed to fetch customers" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

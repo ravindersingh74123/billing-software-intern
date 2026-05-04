@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     const body = await req.json();
 
-    // ✅ basic validation
+    // ✅ validation
     if (!body.customerId || !body.invoiceNo || !body.items?.length) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -41,22 +41,50 @@ export async function POST(req: Request) {
       );
     }
 
+    // 🔥 calculate total on backend (DO NOT trust frontend)
+    const totalAmount = body.items.reduce((sum: number, i: any) => {
+      const taxable = i.rate * i.quantity;
+      const gst = +(taxable * (i.gstRate ?? 0) / 100).toFixed(2);
+      return sum + taxable + gst;
+    }, 0);
+
     const invoice = await prisma.invoice.create({
       data: {
         userId: user.userId,
         customerId: body.customerId,
         invoiceNo: body.invoiceNo,
-        issueDate: new Date(body.date), // ✅ add date support
-        totalAmount: body.total,
+        issueDate: new Date(body.date),
+
+        // ✅ use backend-calculated total
+        totalAmount,
 
         items: {
-          create: body.items.map((i: any) => ({
-            itemId: i.itemId || null, // optional relation
-            name: i.name,
-            price: i.rate,
-            quantity: i.quantity,
-            total: i.amount,
-          })),
+          create: body.items.map((i: any) => {
+            const taxableAmount = i.rate * i.quantity;
+
+            const gstRate = i.gstRate ?? 0;
+
+            const gstAmount =
+              i.gstAmount ??
+              +(taxableAmount * gstRate / 100).toFixed(2);
+
+            const total =
+              i.amount ??
+              +(taxableAmount + gstAmount).toFixed(2);
+
+            return {
+              itemId: i.itemId || null,
+              name: i.name,
+              price: i.rate,
+              quantity: i.quantity,
+
+              // 🔥 NEW GST FIELDS
+              taxableAmount,
+              gstRate,
+              gstAmount,
+              total,
+            };
+          }),
         },
       },
     });

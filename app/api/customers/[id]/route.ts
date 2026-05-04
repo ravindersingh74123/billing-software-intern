@@ -1,3 +1,4 @@
+
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
@@ -23,15 +24,17 @@ async function getUser() {
 // 🔹 GET SINGLE
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await context.params;
+
   const user = await getUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const customer = await prisma.customer.findFirst({
     where: {
-      id: params.id,
+      id,
       userId: user.userId,
     },
   });
@@ -42,26 +45,38 @@ export async function GET(
 // 🔹 UPDATE
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> },
 ) {
+  const { id } = await context.params;
+
   const user = await getUser();
   if (!user)
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
 
+  const existing = await prisma.customer.findFirst({
+    where: {
+      id,
+      userId: user.userId,
+    },
+  });
+
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   const updated = await prisma.customer.update({
-    where: { id: params.id },
+    where: { id },
     data: body,
   });
 
   return NextResponse.json(updated);
 }
 
-
 export async function DELETE(
   req: Request,
-  context: { params: Promise<{ id: string }> }
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
     const { id } = await context.params;
@@ -79,7 +94,7 @@ export async function DELETE(
     if (used) {
       return NextResponse.json(
         { error: "Customer is used in invoices" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -91,12 +106,11 @@ export async function DELETE(
     });
 
     return NextResponse.json({ success: true });
-
   } catch (err) {
     console.error("DELETE /customers/[id] error:", err);
     return NextResponse.json(
       { error: "Failed to delete customer" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -14,6 +14,8 @@ export default function EditItemPage() {
     price: "",
     unit: "",
     description: "",
+    gstRate: "",
+    hsn: "",
   });
 
   const [loading, setLoading] = useState(true);
@@ -40,6 +42,8 @@ export default function EditItemPage() {
         price: String(data.price || ""),
         unit: data.unit || "",
         description: data.description || "",
+        gstRate: String(data.gstRate || ""),
+        hsn: data.hsn || "",
       });
     } catch (err) {
       console.error(err);
@@ -66,6 +70,7 @@ export default function EditItemPage() {
         body: JSON.stringify({
           ...form,
           price: Number(form.price),
+          gstRate: form.gstRate === "" ? null : Number(form.gstRate),
         }),
       });
 
@@ -113,6 +118,29 @@ export default function EditItemPage() {
               className="col-span-2 bg-white/80 border border-gray-200 rounded-md px-3 py-2"
               value={form.unit}
               onChange={(e) => handleChange("unit", e.target.value)}
+            />
+          </div>
+
+          {/* GST Rate */}
+          <div className="grid grid-cols-3 gap-4 items-center">
+            <label className="text-sm text-gray-600">GST Rate %</label>
+            <input
+              type="number"
+              className="col-span-2 bg-white/80 border border-gray-200 rounded-md px-3 py-2"
+              value={form.gstRate}
+              onChange={(e) => handleChange("gstRate", e.target.value)}
+              placeholder="e.g. 5, 12, 18"
+            />
+          </div>
+
+          {/* HSN */}
+          <div className="grid grid-cols-3 gap-4 items-center">
+            <label className="text-sm text-gray-600">HSN Number</label>
+            <input
+              className="col-span-2 bg-white/80 border border-gray-200 rounded-md px-3 py-2"
+              value={form.hsn}
+              onChange={(e) => handleChange("hsn", e.target.value)}
+              placeholder="e.g. 9983"
             />
           </div>
 

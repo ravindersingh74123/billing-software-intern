@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "InvoiceItem" ADD COLUMN     "gstAmount" DOUBLE PRECISION,
+ADD COLUMN     "gstRate" DOUBLE PRECISION,
+ADD COLUMN     "taxableAmount" DOUBLE PRECISION,
+ALTER COLUMN "total" DROP NOT NULL;

@@ -12,6 +12,8 @@ type Item = {
   id: string;
   name: string;
   price: number;
+  gstRate: number | null;
+  hsn: string | null;
 };
 
 type Row = {
@@ -19,6 +21,8 @@ type Row = {
   name: string;
   quantity: number;
   rate: number;
+  gstRate: number;
+  gstAmount: number;
   amount: number;
 };
 
@@ -82,6 +86,8 @@ export default function EditInvoicePage() {
           name: i.name,
           quantity: i.quantity,
           rate: i.price,
+          gstRate: i.gstRate ?? 0,
+          gstAmount: i.gstAmount ?? 0,
           amount: i.total,
         })),
       );
@@ -97,31 +103,59 @@ export default function EditInvoicePage() {
     if (!item) return;
 
     const updated = [...rows];
+    const taxableAmount = item.price * updated[index].quantity;
+    const gstRate = item.gstRate ?? 0;
+    const gstAmount = +((taxableAmount * gstRate) / 100).toFixed(2);
+    const totalAmount = +(taxableAmount + gstAmount).toFixed(2);
+
     updated[index] = {
       ...updated[index],
       itemId,
       name: item.name,
       rate: item.price,
-      amount: item.price * updated[index].quantity,
+      gstRate,
+      gstAmount,
+      amount: totalAmount,
     };
 
     setRows(updated);
   };
+
   const removeRow = (index: number) => {
     if (rows.length === 1) return; // don't allow empty invoice
     setRows(rows.filter((_, i) => i !== index));
   };
+
   const handleQtyChange = (index: number, qty: number) => {
     const updated = [...rows];
-    updated[index].quantity = qty;
-    updated[index].amount = qty * updated[index].rate;
+    const row = updated[index];
+
+    const taxableAmount = row.rate * qty;
+    const gstAmount = +((taxableAmount * row.gstRate) / 100).toFixed(2);
+    const totalAmount = +(taxableAmount + gstAmount).toFixed(2);
+
+    updated[index] = {
+      ...row,
+      quantity: qty,
+      gstAmount,
+      amount: totalAmount,
+    };
+
     setRows(updated);
   };
 
   const addRow = () => {
     setRows([
       ...rows,
-      { itemId: "", name: "", quantity: 1, rate: 0, amount: 0 },
+      {
+        itemId: "",
+        name: "",
+        quantity: 1,
+        rate: 0,
+        gstRate: 0,
+        gstAmount: 0,
+        amount: 0,
+      },
     ]);
   };
 
@@ -162,12 +196,14 @@ export default function EditInvoicePage() {
       {/* Table */}
       <table className="w-full border rounded-xl overflow-hidden">
         <thead className="bg-gray-50">
-          <tr>
-            <th className="p-3 text-left">Item</th>
-            <th className="p-3 text-center">Qty</th>
-            <th className="p-3 text-center">Rate</th>
-            <th className="p-3 text-center">Amount</th>
-            <th className="p-3 text-right">Action</th>
+          <tr className="border-b">
+            <th className="p-3 text-left w-[30%]">Item</th>
+            <th className="p-3 text-center w-[10%]">Qty</th>
+            <th className="p-3 text-right w-[12%]">Rate</th>
+            <th className="p-3 text-center w-[10%]">GST %</th>
+            <th className="p-3 text-right w-[18%]">Amount</th>
+            <th className="p-3 text-right w-[15%]">Total</th>
+            <th className="p-3 text-right w-[5%]">Action</th>
           </tr>
         </thead>
 
@@ -200,11 +236,23 @@ export default function EditInvoicePage() {
                 />
               </td>
 
-              {/* Rate */}
-              <td className="p-3 text-center">₹ {row.rate}</td>
+              <td className="p-3 text-right font-mono tabular-nums">
+                ₹ {row.rate.toFixed(2)}
+              </td>
+
+              <td className="p-3 text-center">{row.gstRate}%</td>
 
               {/* Amount */}
-              <td className="p-3 text-center font-medium">₹ {row.amount}</td>
+              <td className="p-3 text-right font-mono tabular-nums leading-tight">
+                <div>₹ {(row.rate * row.quantity).toFixed(2)}</div>
+                <div className="text-xs text-gray-500">
+                  + ₹ {row.gstAmount.toFixed(2)}
+                </div>
+              </td>
+
+              <td className="p-3 text-right font-semibold font-mono tabular-nums">
+                ₹ {row.amount.toFixed(2)}
+              </td>
 
               {/* Delete */}
               <td className="p-3 text-right">
@@ -244,5 +292,3 @@ export default function EditInvoicePage() {
     </div>
   );
 }
-
-

@@ -96,7 +96,7 @@ export default function InvoicesPage() {
               <th className="px-6 py-3 text-left">Invoice#</th>
               <th className="px-6 py-3 text-left">Customer Name</th>
               <th className="px-6 py-3 text-left">Status</th>
-              <th className="px-6 py-3 text-left">Amount</th>
+              <th className="px-6 py-3 text-left">Total</th>
               <th className="px-6 py-3 text-right">Action</th>
             </tr>
           </thead>
@@ -104,13 +104,13 @@ export default function InvoicesPage() {
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={5} className="px-6 py-6 text-center text-gray-500">
+                <td colSpan={6} className="px-6 py-6 text-center text-gray-500">
                   Loading...
                 </td>
               </tr>
             ) : invoices.length === 0 ? (
               <tr>
-                <td colSpan={5} className="px-6 py-6 text-center text-gray-500">
+                <td colSpan={6} className="px-6 py-6 text-center text-gray-500">
                   No invoices found
                 </td>
               </tr>
@@ -138,8 +138,11 @@ export default function InvoicesPage() {
                     </span>
                   </td>
 
-                  <td className="px-6 py-4 font-medium">
-                    {formatCurrency(inv.totalAmount)}
+                  <td className="px-6 py-4">
+                    <div className="font-medium">
+                      {formatCurrency(inv.totalAmount)}
+                    </div>
+                    <div className="text-xs text-gray-500">GST Included</div>
                   </td>
 
                   <td className="px-6 py-4 text-right">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import * as XLSX from "xlsx";
 
 type Item = {
   id: string;
@@ -33,9 +34,9 @@ export default function ItemsPage() {
           return;
         }
         if (res.status === 400) {
-        alert(data?.error || "Item cannot be deleted");
-        return;
-      }
+          alert(data?.error || "Item cannot be deleted");
+          return;
+        }
         return;
       }
 
@@ -86,6 +87,49 @@ export default function ItemsPage() {
     fetchItems();
   }, [fetchItems]);
 
+
+  const handleFileUpload = async (e: any) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const data = await file.arrayBuffer();
+
+  const workbook = XLSX.read(data);
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+  const jsonData = XLSX.utils.sheet_to_json(sheet);
+
+  // 🔥 transform data
+  const items = jsonData.map((row: any) => ({
+    name: row["Name"],
+    price: Number(row["Price"]),
+    unit: row["Unit"] || null,
+    gstRate: Number(row["GST rate"] || 0),
+    hsn: row["HSN number"] || null,
+    description: row["description"] || null,
+  }));
+
+  try {
+    const res = await fetch("/api/items/bulk", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ items }),
+    });
+
+    if (!res.ok) throw new Error();
+
+    alert("Items uploaded successfully");
+
+    // 🔥 refresh list
+    window.location.reload();
+  } catch (err) {
+    console.error(err);
+    alert("Upload failed");
+  }
+};
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -98,6 +142,16 @@ export default function ItemsPage() {
         >
           + New Item
         </button>
+
+        <label className="bg-green-600 text-white px-4 py-2 rounded cursor-pointer">
+          Upload Excel
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+        </label>
       </div>
 
       {/* States */}

@@ -40,6 +40,19 @@ model Customer {
   pan            String?
   gstin          String?
 
+  // address
+  addressLine1   String?
+  addressLine2   String?
+  city           String?
+  state          String?
+  pincode        String?
+
+  // bank details
+  bankName       String?
+  accountName    String?
+  accountNumber  String?
+  ifsc           String?
+
   invoices       Invoice[]
 
   createdAt      DateTime @default(now())
@@ -47,7 +60,6 @@ model Customer {
 
   @@index([userId])
 }
-
 
 model Item {
   id          String   @id @default(uuid())
@@ -60,6 +72,9 @@ model Item {
   unit        String?
   description String?
 
+  gstRate     Float?   // e.g. 5, 12, 18
+  hsn         String?   // keep as string
+
   invoiceItems InvoiceItem[]
 
   createdAt   DateTime @default(now())
@@ -67,7 +82,6 @@ model Item {
 
   @@index([userId])
 }
-
 
 model Invoice {
   id          String   @id @default(uuid())
@@ -97,13 +111,15 @@ model InvoiceItem {
   invoiceId String
   invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
 
-  // optional reference to original item
   itemId    String?
   item      Item?   @relation(fields: [itemId], references: [id])
 
-  // snapshot fields (VERY IMPORTANT)
   name      String
   price     Float
   quantity  Int
-  total     Float
+
+  taxableAmount Float?
+  gstRate       Float?
+  gstAmount     Float?
+  total         Float?
 }

@@ -12,6 +12,7 @@ type Item = {
   id: string;
   name: string;
   price: number;
+  gstRate: number | null;
 };
 
 type Row = {
@@ -19,6 +20,8 @@ type Row = {
   name: string;
   quantity: number;
   rate: number;
+  gstRate: number;
+  gstAmount: number;
   amount: number;
 };
 
@@ -33,7 +36,15 @@ export default function CreateInvoicePage() {
   const [date, setDate] = useState("");
 
   const [rows, setRows] = useState<Row[]>([
-    { itemId: "", name: "", quantity: 1, rate: 0, amount: 0 },
+    {
+      itemId: "",
+      name: "",
+      quantity: 1,
+      rate: 0,
+      gstRate: 0,
+      gstAmount: 0,
+      amount: 0,
+    },
   ]);
 
   const total = rows.reduce((sum, r) => sum + r.amount, 0);
@@ -73,12 +84,21 @@ export default function CreateInvoicePage() {
     if (!item) return;
 
     const updated = [...rows];
+
+    const qty = updated[index].quantity;
+    const taxable = item.price * qty;
+    const gstRate = item.gstRate ?? 0;
+    const gstAmount = +((taxable * gstRate) / 100).toFixed(2);
+    const total = +(taxable + gstAmount).toFixed(2);
+
     updated[index] = {
       ...updated[index],
       itemId,
       name: item.name,
       rate: item.price,
-      amount: item.price * updated[index].quantity,
+      gstRate,
+      gstAmount,
+      amount: total,
     };
 
     setRows(updated);
@@ -87,8 +107,19 @@ export default function CreateInvoicePage() {
   // 🔹 quantity change
   const handleQtyChange = (index: number, qty: number) => {
     const updated = [...rows];
-    updated[index].quantity = qty;
-    updated[index].amount = qty * updated[index].rate;
+    const row = updated[index];
+
+    const taxable = row.rate * qty;
+    const gstAmount = +((taxable * row.gstRate) / 100).toFixed(2);
+    const total = +(taxable + gstAmount).toFixed(2);
+
+    updated[index] = {
+      ...row,
+      quantity: qty,
+      gstAmount,
+      amount: total,
+    };
+
     setRows(updated);
   };
 
@@ -96,7 +127,15 @@ export default function CreateInvoicePage() {
   const addRow = () => {
     setRows([
       ...rows,
-      { itemId: "", name: "", quantity: 1, rate: 0, amount: 0 },
+      {
+        itemId: "",
+        name: "",
+        quantity: 1,
+        rate: 0,
+        gstRate: 0,
+        gstAmount: 0,
+        amount: 0,
+      },
     ]);
   };
 
@@ -118,7 +157,6 @@ export default function CreateInvoicePage() {
 
   return (
     <div className="p-6">
-
       <h1 className="text-2xl font-semibold mb-6">New Invoice</h1>
 
       {/* Customer */}
@@ -140,11 +178,7 @@ export default function CreateInvoicePage() {
 
       {/* Invoice Info */}
       <div className="flex gap-4 mb-6">
-        <input
-          className="border p-2 rounded-md"
-          value={invoiceNo}
-          readOnly
-        />
+        <input className="border p-2 rounded-md" value={invoiceNo} readOnly />
         <input
           type="date"
           className="border p-2 rounded-md"
@@ -158,25 +192,24 @@ export default function CreateInvoicePage() {
         <table className="w-full text-sm">
           <thead className="bg-gray-50">
             <tr>
-              <th className="p-3 text-left">Item Details</th>
-              <th className="p-3 text-left">Quantity</th>
+              <th className="p-3 text-left">Item</th>
+              <th className="p-3 text-left">Qty</th>
               <th className="p-3 text-left">Rate</th>
+              <th className="p-3 text-left">GST %</th>
               <th className="p-3 text-left">Amount</th>
+              <th className="p-3 text-left">Total</th>
             </tr>
           </thead>
 
           <tbody>
             {rows.map((row, i) => (
               <tr key={i} className="border-t">
-
                 {/* ITEM DROPDOWN */}
                 <td className="p-3">
                   <select
                     className="w-full border p-2 rounded-md"
                     value={row.itemId}
-                    onChange={(e) =>
-                      handleItemSelect(i, e.target.value)
-                    }
+                    onChange={(e) => handleItemSelect(i, e.target.value)}
                   >
                     <option value="">Select item</option>
                     {items.map((item) => (
@@ -193,18 +226,21 @@ export default function CreateInvoicePage() {
                     type="number"
                     className="border p-2 rounded-md w-20"
                     value={row.quantity}
-                    onChange={(e) =>
-                      handleQtyChange(i, Number(e.target.value))
-                    }
+                    onChange={(e) => handleQtyChange(i, Number(e.target.value))}
                   />
                 </td>
 
-                {/* RATE */}
                 <td className="p-3">₹ {row.rate}</td>
+                <td className="p-3">{row.gstRate}%</td>
+                <td className="p-3 text-right font-mono">
+                  <div>₹ {(row.rate * row.quantity).toFixed(2)}</div>
+                  <div className="text-xs text-gray-500">
+                    + ₹ {row.gstAmount.toFixed(2)}
+                  </div>
+                </td>
 
-                {/* AMOUNT */}
-                <td className="p-3 font-medium">
-                  ₹ {row.amount}
+                <td className="p-3 text-right font-semibold font-mono">
+                  ₹ {row.amount.toFixed(2)}
                 </td>
               </tr>
             ))}
@@ -213,10 +249,7 @@ export default function CreateInvoicePage() {
       </div>
 
       {/* ADD ROW */}
-      <button
-        onClick={addRow}
-        className="mt-4 text-blue-600 text-sm"
-      >
+      <button onClick={addRow} className="mt-4 text-blue-600 text-sm">
         + Add New Row
       </button>
 

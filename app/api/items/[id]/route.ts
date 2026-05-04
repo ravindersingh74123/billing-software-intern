@@ -40,10 +40,7 @@ export async function GET(
 
   // 🔥 FIX
   if (!item) {
-    return NextResponse.json(
-      { error: "Item not found" },
-      { status: 404 }
-    );
+    return NextResponse.json({ error: "Item not found" }, { status: 404 });
   }
 
   return NextResponse.json(item);
@@ -73,6 +70,11 @@ export async function PUT(
       price: Number(body.price),
       unit: body.unit || null,
       description: body.description || null,
+      gstRate:
+        body.gstRate !== "" && body.gstRate !== undefined
+          ? Number(body.gstRate)
+          : null,
+      hsn: body.hsn || null,
     },
   });
 
