@@ -102,23 +102,28 @@ export default function EditInvoicePage() {
     const item = items.find((i) => i.id === itemId);
     if (!item) return;
 
-    const updated = [...rows];
-    const taxableAmount = item.price * updated[index].quantity;
-    const gstRate = item.gstRate ?? 0;
-    const gstAmount = +((taxableAmount * gstRate) / 100).toFixed(2);
-    const totalAmount = +(taxableAmount + gstAmount).toFixed(2);
+    const updatedRows = [...rows];
 
-    updated[index] = {
-      ...updated[index],
+    const quantity = updatedRows[index].quantity;
+
+    const rate = item.price;
+    const gstRate = item.gstRate || 0;
+
+    const taxable = rate * quantity;
+    const gstAmount = (taxable * gstRate) / 100;
+    const total = taxable + gstAmount;
+
+    updatedRows[index] = {
+      ...updatedRows[index],
       itemId,
       name: item.name,
-      rate: item.price,
+      rate,
       gstRate,
       gstAmount,
-      amount: totalAmount,
+      amount: total,
     };
 
-    setRows(updated);
+    setRows(updatedRows);
   };
 
   const removeRow = (index: number) => {
@@ -126,22 +131,40 @@ export default function EditInvoicePage() {
     setRows(rows.filter((_, i) => i !== index));
   };
 
+  const handleRateChange = (index: number, newRate: number) => {
+    const updatedRows = [...rows];
+
+    updatedRows[index].rate = newRate;
+
+    const quantity = updatedRows[index].quantity;
+    const gstRate = updatedRows[index].gstRate;
+
+    // 🔥 calculation
+    const taxable = newRate * quantity;
+    const gstAmount = (taxable * gstRate) / 100;
+    const total = taxable + gstAmount;
+
+    updatedRows[index].gstAmount = gstAmount;
+    updatedRows[index].amount = total;
+
+    setRows(updatedRows);
+  };
+
   const handleQtyChange = (index: number, qty: number) => {
-    const updated = [...rows];
-    const row = updated[index];
+    const updatedRows = [...rows];
 
-    const taxableAmount = row.rate * qty;
-    const gstAmount = +((taxableAmount * row.gstRate) / 100).toFixed(2);
-    const totalAmount = +(taxableAmount + gstAmount).toFixed(2);
+    updatedRows[index].quantity = qty;
 
-    updated[index] = {
-      ...row,
-      quantity: qty,
-      gstAmount,
-      amount: totalAmount,
-    };
+    const rate = updatedRows[index].rate;
+    const gstRate = updatedRows[index].gstRate;
 
-    setRows(updated);
+    const taxable = rate * qty;
+    const gstAmount = (taxable * gstRate) / 100;
+
+    updatedRows[index].gstAmount = gstAmount;
+    updatedRows[index].amount = taxable + gstAmount;
+
+    setRows(updatedRows);
   };
 
   const addRow = () => {
@@ -236,8 +259,16 @@ export default function EditInvoicePage() {
                 />
               </td>
 
-              <td className="p-3 text-right font-mono tabular-nums">
+              {/* <td className="p-3 text-right font-mono tabular-nums">
                 ₹ {row.rate.toFixed(2)}
+              </td> */}
+              <td className="p-3 text-right font-mono tabular-nums">
+                <input
+                  type="number"
+                  value={row.rate}
+                  onChange={(e) => handleRateChange(i, Number(e.target.value))}
+                  className="border rounded px-2 py-1 w-24 text-center"
+                />
               </td>
 
               <td className="p-3 text-center">{row.gstRate}%</td>
