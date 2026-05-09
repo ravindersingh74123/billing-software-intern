@@ -461,15 +461,7 @@ export default function EmiCalculator() {
                   </div>
                 </div>
               </div>
-              <div className="mt-6 flex justify-end">
-                <button
-                  type="button"
-                  onClick={handlePrint}
-                  className="rounded-full bg-[#1B9AAA] px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-[#168a99]"
-                >
-                  Download / Print Report
-                </button>
-              </div>
+              
               <div className="mt-6 rounded-[22px] bg-white/95 p-4 shadow-xl">
                 <button
                   type="button"
