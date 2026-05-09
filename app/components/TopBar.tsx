@@ -39,7 +39,7 @@ export default function TopBar({ user }: Props) {
   const isActive = (path: string) => pathname.startsWith(path);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#ddeaed]/70 bg-white/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 w-full border-b border-[#ddeaed]/70 bg-white/70 backdrop-blur-xl no-print">
       <div className="flex w-full items-center justify-between px-6 lg:px-10 py-3">
         {/* Brand */}
         <div className="flex items-center gap-3">
