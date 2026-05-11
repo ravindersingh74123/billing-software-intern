@@ -110,16 +110,12 @@ export default function EmiCalculator() {
   }, [amount, rate, loanMonths, emiData.emi]);
 
   const handlePrint = () => {
-    setShowBreakdown(true);
-
-    setTimeout(() => {
-      window.print();
-    }, 700);
+    window.print();
   };
 
   return (
-    <div className="bg-gradient-to-b from-[#F8FCFD] to-[#EEF8FA]">
-      <div className="no-print">
+    <div className="bg-gradient-to-b from-[#F8FCFD] to-[#EEF8FA] min-h-screen">
+      <div className="print:hidden">
         <section className="bg-gradient-to-r from-emerald-50 to-teal-50 pb-10 rounded-[22px]">
           <div className="mx-auto max-w-[1100px]  px-5 pt-8 ">
             <div className="text-center">
@@ -465,6 +461,15 @@ export default function EmiCalculator() {
               <div className="mt-6 rounded-[22px] bg-white/95 p-4 shadow-xl">
                 <button
                   type="button"
+                  onClick={handlePrint}
+                  className="mb-4 flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-[#1B9AAA] to-[#147a88] px-5 py-4 text-center font-bold text-white shadow-md transition hover:scale-[1.01] hover:shadow-lg"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download / Print Report
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setShowBreakdown((prev) => !prev)}
                   className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-left transition hover:bg-slate-100"
                 >
@@ -649,7 +654,133 @@ export default function EmiCalculator() {
           </div>
         </section>
       </div>
-    
+      
+      {/* --- PRINT ONLY LAYOUT --- */}
+      <div className="hidden print:block bg-white text-black min-h-screen max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="border-b-2 border-slate-200 pb-6 mb-8 text-center">
+          <h1 className="text-4xl font-black text-[#1B9AAA] uppercase tracking-wider">
+            EMI Loan Report
+          </h1>
+          <p className="text-slate-500 mt-2 text-sm">
+            Generated on {new Date().toLocaleDateString("en-IN", { day: 'numeric', month: 'long', year: 'numeric' })}
+          </p>
+          <div className="mt-4 inline-block rounded-full border border-[#1B9AAA] bg-[#EEF8FA] px-4 py-1 text-sm font-bold text-[#1B9AAA] uppercase tracking-widest">
+            {loanType} Loan
+          </div>
+        </div>
+
+        {/* Summary Details */}
+        <div className="mb-10 rounded-2xl border border-slate-200 p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4 uppercase tracking-widest">
+            Loan Summary
+          </h2>
+          <div className="grid grid-cols-3 gap-6">
+            <div>
+              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Loan Amount</p>
+              <p className="text-xl font-bold text-slate-900">₹ {formatINR(amount)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Interest Rate</p>
+              <p className="text-xl font-bold text-slate-900">{rate}% p.a.</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Tenure</p>
+              <p className="text-xl font-bold text-slate-900">{tenure} {tenureType}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Monthly EMI</p>
+              <p className="text-xl font-bold text-[#1B9AAA]">₹ {formatINR(emiData.emi)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Interest</p>
+              <p className="text-xl font-bold text-red-600">₹ {formatINR(emiData.totalInterest)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Total Payment</p>
+              <p className="text-xl font-bold text-slate-900">₹ {formatINR(emiData.totalPayment)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Chart Visualization */}
+        <div className="mb-12 flex justify-center items-center">
+          <div className="w-[300px] h-[300px] relative">
+            <PieChart width={300} height={300}>
+              <Pie
+                data={chartData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={90}
+                paddingAngle={4}
+                dataKey="value"
+                isAnimationActive={false}
+              >
+                {chartData.map((_, index) => (
+                  <Cell key={index} fill={COLORS[index]} />
+                ))}
+              </Pie>
+            </PieChart>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
+              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Total Payment</p>
+              <p className="text-lg font-black text-slate-900">₹ {formatINR(emiData.totalPayment)}</p>
+            </div>
+          </div>
+          <div className="ml-8 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 rounded-sm bg-[#1B9AAA]" />
+              <div>
+                <p className="text-xs text-slate-500 font-semibold uppercase">Total Interest</p>
+                <p className="text-sm font-bold text-slate-900">₹ {formatINR(emiData.totalInterest)} ({emiData.totalPayment > 0 ? (emiData.totalInterest / emiData.totalPayment * 100).toFixed(1) : 0}%)</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-4 h-4 rounded-sm bg-[#14163A]" />
+              <div>
+                <p className="text-xs text-slate-500 font-semibold uppercase">Principal Amount</p>
+                <p className="text-sm font-bold text-slate-900">₹ {formatINR(amount)} ({emiData.totalPayment > 0 ? (amount / emiData.totalPayment * 100).toFixed(1) : 0}%)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Month-wise Breakdown */}
+        <div className="w-full page-break-before-auto">
+          <h2 className="text-lg font-bold text-slate-800 border-b border-slate-100 pb-3 mb-4 uppercase tracking-widest">
+            Month-wise Repayment Schedule
+          </h2>
+          <table className="min-w-full border-collapse border border-slate-200 text-sm text-left">
+            <thead className="bg-slate-100 border-b border-slate-200">
+              <tr className="text-slate-700 uppercase tracking-wider text-[11px]">
+                <th className="px-4 py-3 font-bold border-r border-slate-200">Month</th>
+                <th className="px-4 py-3 font-bold border-r border-slate-200">Opening Balance</th>
+                <th className="px-4 py-3 font-bold border-r border-slate-200">EMI</th>
+                <th className="px-4 py-3 font-bold border-r border-slate-200">Interest</th>
+                <th className="px-4 py-3 font-bold border-r border-slate-200">Principal</th>
+                <th className="px-4 py-3 font-bold">Closing Balance</th>
+              </tr>
+            </thead>
+            <tbody>
+              {monthlyBreakdown.map((row, index) => (
+                <tr key={row.month} className={index % 2 === 0 ? "bg-white" : "bg-slate-50"}>
+                  <td className="px-4 py-2 border-r border-slate-200 font-medium">{row.month}</td>
+                  <td className="px-4 py-2 border-r border-slate-200 text-slate-700">₹ {formatINR(row.openingBalance)}</td>
+                  <td className="px-4 py-2 border-r border-slate-200 text-slate-700 font-semibold text-[#1B9AAA]">₹ {formatINR(row.emi)}</td>
+                  <td className="px-4 py-2 border-r border-slate-200 text-red-600">₹ {formatINR(row.interest)}</td>
+                  <td className="px-4 py-2 border-r border-slate-200 text-green-700">₹ {formatINR(row.principal)}</td>
+                  <td className="px-4 py-2 text-slate-900 font-medium">₹ {formatINR(row.closingBalance)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-12 pt-6 border-t border-slate-200 text-center text-xs text-slate-400 font-medium uppercase tracking-widest">
+          Generated by EMI Calculator • Not an official bank statement
+        </div>
+      </div>
 
       <style jsx global>{`
         .emi-slider {
@@ -696,31 +827,16 @@ export default function EmiCalculator() {
         }
 
         @media print {
-          .no-print {
-            display: none !important;
+          @page {
+            margin: 15mm;
+            size: auto;
           }
-
-          .print\\:block {
-            display: block !important;
-          }
-
-          .print\\:block * {
-            visibility: visible;
-          }
-
-          .print\\:block {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-          }
-
-          tr {
+          tr, td, th {
             page-break-inside: avoid;
           }
-
-          @page {
-            margin: 20px;
+          body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
           }
         }
       `}</style>

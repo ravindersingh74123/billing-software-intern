@@ -1,11 +1,16 @@
 import { PrismaClient } from "@/app/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
-
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL!,
-});
+import { Pool } from "pg";
 
 const prismaClientSingleton = () => {
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) {
+    console.error("DATABASE_URL is not defined in the environment!");
+  }
+  
+  const pool = new Pool({ connectionString: connectionString! });
+  const adapter = new PrismaPg(pool);
+
   return new PrismaClient({
     adapter,
   });
