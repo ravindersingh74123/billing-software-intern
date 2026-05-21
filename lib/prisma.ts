@@ -7,13 +7,11 @@ const prismaClientSingleton = () => {
   if (!connectionString) {
     console.error("DATABASE_URL is not defined in the environment!");
   }
-  
+
   const pool = new Pool({ connectionString: connectionString! });
   const adapter = new PrismaPg(pool);
 
-  return new PrismaClient({
-    adapter,
-  });
+  return new PrismaClient({ adapter });
 };
 
 declare global {
@@ -21,10 +19,15 @@ declare global {
   var prismaGlobal: PrismaClient | undefined;
 }
 
+// In dev, always discard the stale singleton so a re-generated Prisma client
+// (after `prisma generate`) is picked up immediately without a full server restart.
+if (process.env.NODE_ENV !== "production") {
+  delete (global as { prismaGlobal?: PrismaClient }).prismaGlobal;
+}
+
 export const prisma =
   global.prismaGlobal ?? prismaClientSingleton();
 
-// ✅ IMPORTANT: assign in dev to prevent multiple instances
 if (process.env.NODE_ENV !== "production") {
   global.prismaGlobal = prisma;
-}
+}
